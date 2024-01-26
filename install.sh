@@ -37,21 +37,28 @@ function clear_journal_logs() {
 
 # Update packages list and update system:
 echo "$USER"
-sudo sh -c 'echo "deb https://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+sudo sh -c 'echo "# Debian Stable.
+deb https://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+# deb-src https://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
 deb https://deb.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware
-deb https://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
-deb https://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware
-" > /etc/apt/sources.list'
+# deb-src https://deb.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware
 
+#debian backports
+deb https://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware
+# deb-src https://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware
+" > /etc/apt/sources.list.d/debian.list'
+sudo sh -c 'echo "# Debian Updates
+deb https://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
+# deb-src https://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
+" > /etc/apt/sources.list.d/debian-stable-updates.list'
 
 sudo apt update && sudo apt list --upgradable && sudo apt upgrade -y
 
 # Prerequisites
 sudo apt install software-properties-common
+sudo add-apt-repository ppa:appimagelauncher-team/stable
+sudo apt update
+sudo apt install appimagelauncher
 
 # Ensure that you have the kernel headers installed
 sudo apt install linux-headers-amd64
@@ -244,12 +251,12 @@ fi
 software_packages=(
     acl attr cifs-utils dnsutils ffmpeg ffmpegthumbnailer firmware-realtek flatpak
     gdebi gnome-software-plugin-flatpak gstreamer1.0-libav gstreamer1.0-plugins-bad
-    gstreamer1.0-plugins-ugly gstreamer1.0-tools gstreamer1.0-vaapi htop
-    krb5-config krb5-user kdegraphics-thumbnailers libavcodec-extra libdvdcss2
-    libdvd-pkg libnss-winbind libpam-winbind neofetch ntp ntpdate
+    gstreamer1.0-plugins-ugly gstreamer1.0-tools gstreamer1.0-vaapi btop
+    kdegraphics-thumbnailers libavcodec-extra libdvdcss2
+    libdvd-pkg neofetch ntp ntpdate
     plasma-discover-backend-flatpak plocate python3-setproctitle rhythmbox samba
     simplescreenrecorder snmp software-properties-common sntp synaptic terminator
-    ttf-mscorefonts-installer tumbler-plugins-extra vlc winbind rar unrar p7zip-rar nvidia-detect
+    ttf-mscorefonts-installer tumbler-plugins-extra vlc rar unrar p7zip-rar nvidia-detect
 )
 
 software_explanations=(
@@ -268,15 +275,15 @@ software_explanations=(
     "gstreamer1.0-plugins-ugly:          GStreamer plugins from the 'ugly' set."
     "gstreamer1.0-tools:                 Tools for GStreamer multimedia framework."
     "gstreamer1.0-vaapi:                 GStreamer plugins for video decoding/encoding using VA-API."
-    "htop:                               Interactive process viewer and system monitor."
-    "krb5-config:                        Configuration files for Kerberos clients."
-    "krb5-user:                          Basic Kerberos programs for client machines."
+    "btop:                               Interactive process viewer and system monitor."
+#    "krb5-config:                        Configuration files for Kerberos clients."
+#    "krb5-user:                          Basic Kerberos programs for client machines."
     "kdegraphics-thumbnailers:           Graphics file format thumbnailers for KDE."
     "libavcodec-extra:                   Extra multimedia codecs for libavcodec."
     "libdvdcss2:                         Library for accessing encrypted DVDs."
     "libdvd-pkg:                         Package for installing DVD support on Debian."
-    "libnss-winbind:                     Name Service Switch module for Winbind."
-    "libpam-winbind:                     Pluggable Authentication Module for Winbind."
+#    "libnss-winbind:                     Name Service Switch module for Winbind."
+#    "libpam-winbind:                     Pluggable Authentication Module for Winbind."
     "neofetch:                           Fast, highly customizable system info script."
     "ntp:                                Network Time Protocol daemon and utility programs."
     "ntpdate:                            Client for setting system time from NTP servers."
@@ -294,7 +301,7 @@ software_explanations=(
     "ttf-mscorefonts-installer:          Installer for Microsoft TrueType core fonts."
     "tumbler-plugins-extra:              Additional plugins for the tumbler thumbnail rendering service."
     "vlc:                                Multimedia player and streaming server."
-    "winbind:                            Samba utility for resolving user and group information from Windows NT servers."
+#    "winbind:                            Samba utility for resolving user and group information from Windows NT servers."
     "rar:                                Archive manager for RAR files."
     "unrar:                              Extract files from RAR archives."
     "p7zip-rar:                          RAR support for p7zip."
@@ -323,53 +330,6 @@ echo "The necessary components for DVD playback are going to be properly install
 sleep 3
 sudo dpkg-reconfigure libdvd-pkg
 
-echo -e "Install Flatpak apps...\n"
-
-# Enable Flatpak
-if ! flatpak remote-list | grep -q "flathub"; then
-    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-fi
-
-# Update Flatpak
-flatpak update -y
-
-echo -e "Updating cache, this will take a while...\n"
-
-# Install Flatpak apps
-packages=(
-    app.drey.Dialect
-    com.github.unrud.VideoDownloader
-    com.sindresorhus.Caprine
-    com.sublimetext.three
-    com.transmissionbt.Transmission
-    com.wps.Office
-    io.github.aandrew_me.ytdn
-    io.github.mimbrero.WhatsAppDesktop
-    org.audacityteam.Audacity
-    org.gimp.GIMP
-    org.gnome.Shotwell
-    org.gnome.SimpleScan
-    org.gnome.gitlab.YaLTeR.VideoTrimmer
-    org.kde.krita
-    org.kde.kweather
-)
-
-# Install each package if not already installed
-for package in "${packages[@]}"; do
-    if ! flatpak list | grep -q "$package"; then
-        echo "Installing $package..."
-        flatpak install -y flathub "$package"
-    else
-        echo "$package is already installed. Skipping..."
-    fi
-done
-
-# Double check for the latest Flatpak updates and remove Flatpak cruft
-flatpak update -y
-flatpak uninstall --unused --delete-data -y
-
-echo -e "\nSoftware install complete..."
-
 # Download teamviewer:
 download_url="https://download.teamviewer.com/download/linux/teamviewer_amd64.deb?utm_source=google&utm_medium=cpc&utm_campaign=au%7Cb%7Cpr%7C22%7Cjun%7Ctv-core-download-sn%7Cfree%7Ct0%7C0&utm_content=Download&utm_term=download+teamviewer"
 download_location="/tmp/teamviewer.x86_64.deb"
@@ -385,11 +345,6 @@ sudo apt-get install "$download_location" -f -y
 # Cleanup
 echo "Cleaning up..."
 rm "$download_location"
-
-# Install Google Chrome 
-sudo wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-sudo apt install -y ./google-chrome-stable_current_amd64.deb
-rm google-chrome-stable_current_amd64.deb
 
 # Install .NET 
 wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
@@ -440,27 +395,6 @@ sudo apt update && sudo apt install -y powershell
 # Start PowerShell
 # pwsh
 
-# Install VirtualBox and download dependencies
-sudo wget http://http.us.debian.org/debian/pool/main/o/openssl/libssl1.1_1.1.1n-0+deb11u5_amd64.deb
-sudo wget http://http.us.debian.org/debian/pool/main/libv/libvpx/libvpx6_1.9.0-1_amd64.deb
-
-# Install dependencies
-sudo dpkg -i libssl1.1_1.1.1n-0+deb11u5_amd64.deb
-sudo dpkg -i libvpx6_1.9.0-1_amd64.deb
-
-# Delete files
-sudo rm libssl1.1_1.1.1n-0+deb11u5_amd64.deb
-sudo rm libvpx6_1.9.0-1_amd64.deb
-
-sudo wget -O- https://www.virtualbox.org/download/oracle_vbox_2016.asc | sudo gpg --dearmor --yes --output /usr/share/keyrings/oracle-virtualbox-2016.gpg
-sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/oracle-virtualbox-2016.gpg] https://download.virtualbox.org/virtualbox/debian bullseye contrib" > /etc/apt/sources.list.d/virtualbox.list'
-
-sudo apt update
-sudo apt install -y virtualbox-7.0
-
-sudo wget https://download.virtualbox.org/virtualbox/7.0.0/Oracle_VM_VirtualBox_Extension_Pack-7.0.0.vbox-extpack
-sudo VBoxManage extpack install --replace Oracle_VM_VirtualBox_Extension_Pack-7.0.0.vbox-extpack
-
 # Check and fix broken packages
 echo "Checking and fixing broken packages..."
 sudo apt-get -f install
@@ -470,13 +404,6 @@ echo "Broken packages fixed."
 echo "Installing Linux kernel header files..."
 sudo apt-get install -y linux-headers-$(uname -r)
 echo "Linux kernel header files installed successfully."
-
-# Build VirtualBox kernel modules
-echo "Building VirtualBox kernel modules..."
-sudo /sbin/vboxconfig
-echo "VirtualBox kernel modules built successfully."
-
-sudo rm Oracle_VM_VirtualBox_Extension_Pack-7.0.0.vbox-extpack
 
 # Check GPU information
 gpu_info=$(lspci | grep -i 'VGA\|3D')
